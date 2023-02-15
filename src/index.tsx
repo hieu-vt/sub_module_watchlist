@@ -8,11 +8,7 @@ import { useFont } from '@shopify/react-native-skia';
 import { Header } from './components/header';
 import { ItemList } from './components/item-list';
 import { PostDelay } from './components/post-delay';
-import {
-  DATA_CHANGE_ACTION_TYPE,
-  HEIGHT_COLUM,
-  setDataWatch,
-} from './constant';
+import { HEIGHT_COLUM } from './constant';
 import { useUnMount } from './hooks';
 import { emitChannel } from './listener';
 import { DataWatch } from './type';
@@ -36,8 +32,11 @@ export const WatchList = forwardRef(
           setKeyData(data);
         },
         onSetDataWatchList: (d: Record<string, DataWatch>) => {
-          setDataWatch(d);
-          emitChannel(DATA_CHANGE_ACTION_TYPE);
+          for (const key in d) {
+            if (d?.[key]) {
+              emitChannel(key, d[key]);
+            }
+          }
         },
       }),
       [],

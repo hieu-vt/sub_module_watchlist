@@ -24,17 +24,11 @@ export const getDataByKey = (key1: string, key2: keyof DataWatch) => {
   if (Object.keys(dataWatchList).length <= 0) {
     return '0';
   }
-  return dataWatchList[key1][key2].toFixed(2);
+  return dataWatchList?.[key1]?.[key2]?.toFixed(2);
 };
 
-export const calculatorPercent = (
-  key1: string,
-  key2: keyof DataWatch,
-  key3: keyof DataWatch,
-) => {
-  const currentPrice = dataWatchList[key1][key2];
-  const openPrice = dataWatchList[key1][key3];
-
+export const calculatorPercent = (currentPrice: number, openPrice: number) => {
+  // console.log('first', currentPrice, openPrice);
   const priceUpDown = currentPrice - openPrice;
   const percent = ((priceUpDown / openPrice) * 100).toFixed(2);
 

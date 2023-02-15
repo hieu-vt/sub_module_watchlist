@@ -20,8 +20,6 @@ import {
 
 import {
   calculatorPercent,
-  DATA_CHANGE_ACTION_TYPE,
-  getDataByKey,
   HEIGHT_CHART,
   HEIGHT_COLUM,
   SPACER_BOTTOM,
@@ -30,7 +28,7 @@ import {
 } from '../constant';
 import { subscribeChannel } from '../listener';
 import { styles } from '../styles';
-import { ItemListProps } from '../type';
+import { DataWatch, ItemListProps } from '../type';
 
 export const ItemList = ({ keyItem, font }: ItemListProps) => {
   // state
@@ -38,12 +36,9 @@ export const ItemList = ({ keyItem, font }: ItemListProps) => {
   const bgColorEnd = useSharedValue('#FEC260');
 
   const textColor = useValue('#FEC260');
-  const openPrice = useValue(getDataByKey(keyItem, 'openPrice'));
-  const price1 = useValue(getDataByKey(keyItem, 'price1'));
-  const fluctuate = useValue(calculatorPercent(keyItem, 'price1', 'openPrice'));
-  const kl3 = useValue(getDataByKey(keyItem, 'kl3'));
-  const kl2 = useValue(getDataByKey(keyItem, 'kl2'));
-  const kl1 = useValue(getDataByKey(keyItem, 'kl1'));
+  const openPrice = useValue('');
+  const price1 = useValue('');
+  const fluctuate = useValue('');
   const p2Line = useValue(vec(WIDTH_CHART - 3, SPACER_BOTTOM + 3));
   const path = Skia.Path.Make();
   path.moveTo(0, HEIGHT_CHART / 2 + SPACER_BOTTOM);
@@ -55,20 +50,20 @@ export const ItemList = ({ keyItem, font }: ItemListProps) => {
   // effect
   useEffect(() => {
     const unsubscribe = subscribeChannel({
-      type: DATA_CHANGE_ACTION_TYPE,
-      cb: () => {
-        const openPriceValue = getDataByKey(keyItem, 'openPrice');
-        const currentPrice = getDataByKey(keyItem, 'price1');
+      type: keyItem,
+      cb: (data: DataWatch) => {
         const percent =
-          Math.abs(Number(currentPrice) - Number(openPriceValue)) /
-            Number(openPriceValue) >
+          Math.abs(Number(data.price1) - Number(data.openPrice)) /
+            Number(data.openPrice) >
           1
             ? 1
-            : Math.abs(Number(currentPrice) - Number(openPriceValue)) /
-              Number(openPriceValue);
-        openPrice.current = openPriceValue;
-        price1.current = currentPrice;
-        fluctuate.current = calculatorPercent(keyItem, 'price1', 'openPrice');
+            : Math.abs(Number(data.price1) - Number(data.openPrice)) /
+              Number(data.openPrice);
+        openPrice.current = `${data.openPrice}`;
+        price1.current = `${data.price1}`;
+
+        console.log('data', data);
+        fluctuate.current = calculatorPercent(data.openPrice, data.price1);
         p2Line.current = vec(
           WIDTH_COLUM * percent,
           (HEIGHT_CHART - (SPACER_BOTTOM + 3)) * percent,
@@ -92,12 +87,7 @@ export const ItemList = ({ keyItem, font }: ItemListProps) => {
           bgColorEnd.value = 'red';
         }
         progress.value = 1;
-        //   progress.value = withTiming(0, { duration: 500 });
-        // price2.current = getDataByKey(keyItem, 'price2');
-        price1.current = getDataByKey(keyItem, 'price1');
-        kl3.current = getDataByKey(keyItem, 'kl3');
-        kl2.current = getDataByKey(keyItem, 'kl2');
-        kl1.current = getDataByKey(keyItem, 'kl1');
+        price1.current = `${data.price1}`;
       },
     });
     return () => {

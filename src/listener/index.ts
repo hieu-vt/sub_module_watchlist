@@ -1,4 +1,4 @@
-export type Listener = { type: string; cb: () => void };
+export type Listener = { type: string; cb: (data: any) => void };
 const subscribedChannel: Listener[] = [];
 
 const subscribe = (listener: Listener, listenerContainer: Listener[]) => {
@@ -20,10 +20,10 @@ export const unsubscribeChannel = () => {
   subscribedChannel.length = 0;
 };
 
-export const emitChannel = (actionType: string) => {
-  subscribedChannel.map((item: { type: string; cb: () => void }) => {
+export const emitChannel = (actionType: string, data: any) => {
+  subscribedChannel.map((item: { type: string; cb: (data: any) => void }) => {
     if (item.type === actionType) {
-      item.cb();
+      item.cb(data);
     }
   });
 };
