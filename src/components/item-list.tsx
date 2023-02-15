@@ -62,7 +62,6 @@ export const ItemList = ({ keyItem, font }: ItemListProps) => {
         openPrice.current = `${data.openPrice}`;
         price1.current = `${data.price1}`;
 
-        console.log('data', data);
         fluctuate.current = calculatorPercent(data.openPrice, data.price1);
         p2Line.current = vec(
           WIDTH_COLUM * percent,
