@@ -19,19 +19,14 @@ export const WatchListDemo = () => {
       ref.current?.onSetKeyData(Object.keys(d));
       setTimeout(() => {
         ref.current?.onSetDataWatchList(d);
+        ref.current?.onEmitWithEvenKey(d);
       }, 1000);
     });
   }, []);
 
   useEffect(() => {
     socketListen('NEW_LIST', d => {
-      ref.current?.onSetDataWatchList(d);
-      // if (!isEqual(keyDataRef.current, Object.keys(d))) {
-      //   const newKey = [...Object.keys(getDataWatch()), ...];
-      //   ref.current?.onSetKeyData(newKey);
-      //   keyDataRef.current = Object.keys(d);
-      //   console.log('Change', Object.keys(d).length);
-      // }
+      ref.current?.onEmitWithEvenKey(d);
     });
   }, [socketListen]);
 

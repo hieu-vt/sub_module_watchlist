@@ -1,6 +1,7 @@
 export type ItemListProps = {
   keyItem: string;
   font: any;
+  index: number;
 };
 
 export type DataWatch = {

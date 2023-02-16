@@ -2,11 +2,10 @@ import { Dimensions } from 'react-native';
 
 import { DataWatch } from './type';
 
-export const WIDTH_COLUM = Dimensions.get('window').width / 8;
+export const WIDTH_COLUM = Dimensions.get('window').width / 3;
 export const HEIGHT_COLUM = 40;
-export const WIDTH_CHART = WIDTH_COLUM * 2;
-export const HEIGHT_CHART = HEIGHT_COLUM * 1.5;
-export const SPACER_BOTTOM = 10;
+export const WIDTH_CHART = WIDTH_COLUM;
+export const HEIGHT_CHART = HEIGHT_COLUM;
 
 export const DATA_CHANGE_ACTION_TYPE = 'DATA_CHANGE_ACTION_TYPE';
 
@@ -28,9 +27,8 @@ export const getDataByKey = (key1: string, key2: keyof DataWatch) => {
 };
 
 export const calculatorPercent = (currentPrice: number, openPrice: number) => {
-  // console.log('first', currentPrice, openPrice);
-  const priceUpDown = currentPrice - openPrice;
-  const percent = ((priceUpDown / openPrice) * 100).toFixed(2);
+  const priceUpDown = (currentPrice - openPrice).toFixed(2);
+  const percent = (((currentPrice - openPrice) * 100) / openPrice).toFixed(2);
 
   return `${priceUpDown} / ${percent}%`;
 };

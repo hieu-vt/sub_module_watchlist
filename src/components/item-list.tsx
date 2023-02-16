@@ -2,13 +2,14 @@ import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
 
 import Animated, {
+  interpolateColor,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
 
 import {
   Canvas,
-  Circle,
   DashPathEffect,
   Group,
   Line,
@@ -20,13 +21,13 @@ import {
 
 import {
   calculatorPercent,
+  getDataWatch,
   HEIGHT_CHART,
   HEIGHT_COLUM,
-  SPACER_BOTTOM,
   WIDTH_CHART,
   WIDTH_COLUM,
 } from '../constant';
-import { subscribeChannel } from '../listener';
+import { emitChannel, subscribeChannel } from '../listener';
 import { styles } from '../styles';
 import { DataWatch, ItemListProps } from '../type';
 
@@ -34,288 +35,116 @@ export const ItemList = ({ keyItem, font }: ItemListProps) => {
   // state
   const progress = useSharedValue(0);
   const bgColorEnd = useSharedValue('#FEC260');
-
+  const bgColor = useDerivedValue(
+    () =>
+      interpolateColor(
+        progress.value,
+        [0, 1],
+        ['transparent', bgColorEnd.value],
+      ),
+    [],
+  );
   const textColor = useValue('#FEC260');
   const openPrice = useValue('');
   const price1 = useValue('');
   const fluctuate = useValue('');
-  const p2Line = useValue(vec(WIDTH_CHART - 3, SPACER_BOTTOM + 3));
+  const p2Line = useValue(vec(WIDTH_CHART - 3, 3));
   const path = Skia.Path.Make();
-  path.moveTo(0, HEIGHT_CHART / 2 + SPACER_BOTTOM);
-  path.lineTo(WIDTH_CHART, SPACER_BOTTOM);
+  path.moveTo(0, HEIGHT_CHART / 2);
+  path.lineTo(WIDTH_CHART, 0);
   const pathValue = useValue(path);
   const cXValue = useValue(WIDTH_CHART - 3);
-  const cYValue = useValue(SPACER_BOTTOM + 3);
+  const cYValue = useValue(3);
 
   // effect
   useEffect(() => {
-    const unsubscribe = subscribeChannel({
-      type: keyItem,
-      cb: (data: DataWatch) => {
-        const percent =
-          Math.abs(Number(data.price1) - Number(data.openPrice)) /
-            Number(data.openPrice) >
-          1
-            ? 1
-            : Math.abs(Number(data.price1) - Number(data.openPrice)) /
-              Number(data.openPrice);
-        openPrice.current = `${data.openPrice}`;
-        price1.current = `${data.price1}`;
+    const unsubscribe = subscribeChannel((data: DataWatch) => {
+      const percent =
+        Math.abs(Number(data.price1) - Number(data.openPrice)) /
+          Number(data.openPrice) >
+        1
+          ? 1
+          : Math.abs(Number(data.price1) - Number(data.openPrice)) /
+            Number(data.openPrice);
+      openPrice.current = `${data.openPrice}`;
+      price1.current = `${data.price1}`;
 
-        fluctuate.current = calculatorPercent(data.openPrice, data.price1);
-        p2Line.current = vec(
-          WIDTH_COLUM * percent,
-          (HEIGHT_CHART - (SPACER_BOTTOM + 3)) * percent,
-        );
+      fluctuate.current = calculatorPercent(data.price1, data.openPrice);
+      p2Line.current = vec(WIDTH_COLUM * percent, (HEIGHT_CHART - 3) * percent);
 
-        cXValue.current = WIDTH_COLUM * percent;
-        cYValue.current = (HEIGHT_CHART - (SPACER_BOTTOM + 3)) * percent;
+      cXValue.current = WIDTH_COLUM * percent;
+      cYValue.current = (HEIGHT_CHART - 3) * percent;
 
-        pathValue.current = path;
+      pathValue.current = path;
 
-        if (price1.current > openPrice.current) {
-          textColor.current = 'green';
-          bgColorEnd.value = 'green';
-        }
-        if (price1.current === openPrice.current) {
-          textColor.current = '#FEC260';
-          bgColorEnd.value = '#FEC260';
-        }
-        if (price1.current < openPrice.current) {
-          textColor.current = 'red';
-          bgColorEnd.value = 'red';
-        }
-        progress.value = 1;
-        price1.current = `${data.price1}`;
-      },
-    });
+      if (data.price1 > data.openPrice) {
+        textColor.current = 'green';
+        bgColorEnd.value = '#0080001c';
+      }
+      if (data.price1 === data.openPrice) {
+        textColor.current = '#FEC260';
+        bgColorEnd.value = 'transparent';
+      }
+      if (data.price1 < data.openPrice) {
+        textColor.current = 'red';
+        bgColorEnd.value = '#ff00000f';
+      }
+      progress.value = 1;
+      price1.current = `${data.price1}`;
+    }, keyItem);
     return () => {
+      emitChannel(keyItem, getDataWatch()?.[keyItem]);
       unsubscribe();
     };
   }, [keyItem]);
 
   const fillStyle = useAnimatedStyle(
     () => ({
-      //   backgroundColor: bgColor.value,
+      backgroundColor: bgColor.value,
     }),
     [],
   );
 
   // render
   return (
-    <View style={styles.itemListContainer}>
+    <Animated.View style={[styles.itemListContainer, fillStyle]}>
       <View style={[styles.cell]}>
         <Text style={styles.name}>{keyItem}</Text>
       </View>
-      <View style={[styles.cell]}>
-        <Canvas
-          style={{
-            width: WIDTH_CHART,
-            height: HEIGHT_CHART,
-          }}>
-          <Group>
-            <Line
-              p1={vec(0, HEIGHT_CHART / 2 + SPACER_BOTTOM)}
-              p2={vec(WIDTH_CHART, HEIGHT_CHART / 2 + SPACER_BOTTOM)}
-              color="gray"
-              style="stroke"
-              strokeWidth={1}>
-              <DashPathEffect intervals={[5, 5]} />
-            </Line>
-            <Group>
-              <Line
-                p1={vec(0, HEIGHT_CHART / 2 + SPACER_BOTTOM)}
-                p2={p2Line}
-                color={textColor}
-                style={'stroke'}
-                strokeWidth={1.5}
-              />
-              <Circle r={3} cx={cXValue} cy={cYValue} color={textColor} />
-            </Group>
-          </Group>
-        </Canvas>
-      </View>
-      <Animated.View style={[styles.cell, fillStyle]}>
-        <Canvas
-          style={[
-            styles.cell,
-            { flexDirection: 'row', width: WIDTH_COLUM * 1.8 },
-          ]}>
-          <Group>
-            <SKText
-              color={textColor}
-              text={price1}
-              x={WIDTH_COLUM / 4}
-              y={HEIGHT_COLUM / 2 + 3}
-              font={font}
-            />
-
-            <SKText
-              color={textColor}
-              text={fluctuate}
-              x={WIDTH_COLUM / 10}
-              y={HEIGHT_COLUM / 2 + 20}
-              font={font}
-            />
-          </Group>
-        </Canvas>
-      </Animated.View>
-    </View>
+      <Canvas
+        style={{
+          width: WIDTH_CHART,
+          height: HEIGHT_CHART,
+        }}>
+        <Group>
+          <Line
+            p1={vec(0, HEIGHT_CHART / 2)}
+            p2={vec(WIDTH_CHART, HEIGHT_CHART / 2)}
+            color="gray"
+            style="stroke"
+            strokeWidth={1}>
+            <DashPathEffect intervals={[5, 5]} />
+          </Line>
+        </Group>
+      </Canvas>
+      <Canvas style={[styles.cell, { width: WIDTH_COLUM / 1.2 }]}>
+        <Group>
+          <SKText
+            color={textColor}
+            text={price1}
+            x={0}
+            y={HEIGHT_COLUM / 2.5}
+            font={font}
+          />
+          <SKText
+            color={textColor}
+            text={fluctuate}
+            x={0}
+            y={HEIGHT_COLUM / 2 + 15}
+            font={font}
+          />
+        </Group>
+      </Canvas>
+    </Animated.View>
   );
 };
-
-// export const ItemList1 = ({ keyItem }: ItemListProps) => {
-//   // state
-
-//   const textColor = useSharedValue('yellow');
-//   const progress = useSharedValue(0);
-//   const bgColorEnd = useSharedValue('yellow');
-//   const bgColor = useDerivedValue(
-//     () =>
-//       interpolateColor(
-//         progress.value,
-//         [0, 1],
-//         ['transparent', bgColorEnd.value],
-//       ),
-//     [],
-//   );
-
-//   const openPrice = useSharedValue(getDataByKey(keyItem, 'openPrice'));
-//   const price3 = useSharedValue(getDataByKey(keyItem, 'price3'));
-//   const price2 = useSharedValue(getDataByKey(keyItem, 'price2'));
-//   const price1 = useSharedValue(getDataByKey(keyItem, 'price1'));
-//   const kl3 = useSharedValue(getDataByKey(keyItem, 'kl3'));
-//   const kl2 = useSharedValue(getDataByKey(keyItem, 'kl2'));
-//   const kl1 = useSharedValue(getDataByKey(keyItem, 'kl1'));
-
-//   const animatedOpenPriceText = useDerivedValue(() => `${openPrice.value}`, []);
-//   const animatedPrice3Text = useDerivedValue(() => `${price3.value}`, []);
-//   const animatedPrice2Text = useDerivedValue(() => `${price2.value}`, []);
-//   const animatedPrice1Text = useDerivedValue(() => `${price1.value}`, []);
-//   const animatedKl3Text = useDerivedValue(() => `${kl3.value}`, []);
-//   const animatedKl2Text = useDerivedValue(() => `${kl2.value}`, []);
-//   const animatedKl1Text = useDerivedValue(() => `${kl1.value}`, []);
-
-//   // effect
-//   useEffect(() => {
-//     const unsubscribe = subscribeActionAfter(DATA_CHANGE_ACTION_TYPE, () => {
-//       openPrice.value = getDataByKey(keyItem, 'openPrice');
-//       price3.value = getDataByKey(keyItem, 'price3');
-//       if (price3.value > openPrice.value) {
-//         textColor.value = 'green';
-//         bgColorEnd.value = 'green';
-//       }
-//       if (price3.value === openPrice.value) {
-//         textColor.value = 'yellow';
-//         bgColorEnd.value = 'yellow';
-//       }
-//       if (price3.value < openPrice.value) {
-//         textColor.value = 'red';
-//         bgColorEnd.value = 'red';
-//       }
-//       //   progress.value = 1;
-//       price2.value = getDataByKey(keyItem, 'price2');
-//       price1.value = getDataByKey(keyItem, 'price1');
-//       kl3.value = getDataByKey(keyItem, 'kl3');
-//       kl2.value = getDataByKey(keyItem, 'kl2');
-//       kl1.value = getDataByKey(keyItem, 'kl1');
-//     });
-//     return () => {
-//       unsubscribe();
-//     };
-//   }, [keyItem]);
-
-//   // text
-//   const animatedOpenPriceProps = useAnimatedProps(() => {
-//     return {
-//       text: animatedOpenPriceText.value,
-//     };
-//   }, []);
-//   const animatedPrice3Props = useAnimatedProps(() => {
-//     return {
-//       text: animatedPrice3Text.value,
-//     };
-//   }, []);
-
-//   const animatedPrice2Props = useAnimatedProps(() => {
-//     return {
-//       text: animatedPrice2Text.value,
-//     };
-//   }, []);
-
-//   const animatedPrice1Props = useAnimatedProps(() => {
-//     return {
-//       text: animatedPrice1Text.value,
-//     };
-//   }, []);
-
-//   const animatedKl3Props = useAnimatedProps(() => {
-//     return {
-//       text: animatedKl3Text.value,
-//     };
-//   }, []);
-
-//   const animatedKl2Props = useAnimatedProps(() => {
-//     return {
-//       text: animatedKl2Text.value,
-//     };
-//   }, []);
-
-//   const animatedKl1Props = useAnimatedProps(() => {
-//     return {
-//       text: animatedKl1Text.value,
-//     };
-//   }, []);
-
-//   //   restyle
-//   const textStyle = useAnimatedStyle(
-//     () => ({ color: textColor.value, fontWeight: 'bold' }),
-//     [],
-//   );
-//   const bgStyle = useAnimatedStyle(
-//     () => ({ backgroundColor: bgColor.value }),
-//     [],
-//   );
-
-//   // render
-//   return (
-//     <View style={styles.itemListContainer}>
-//       <View style={[styles.cell]}>
-//         <Text style={styles.name}>{keyItem}</Text>
-//       </View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText
-//           animatedProps={animatedOpenPriceProps}
-//           style={textStyle}
-//         />
-//       </Animated.View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText
-//           animatedProps={animatedPrice3Props}
-//           style={textStyle}
-//         />
-//       </Animated.View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText
-//           animatedProps={animatedPrice2Props}
-//           style={textStyle}
-//         />
-//       </Animated.View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText
-//           animatedProps={animatedPrice1Props}
-//           style={textStyle}
-//         />
-//       </Animated.View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText animatedProps={animatedKl3Props} style={textStyle} />
-//       </Animated.View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText animatedProps={animatedKl2Props} style={textStyle} />
-//       </Animated.View>
-//       <Animated.View style={[styles.cell, bgStyle]}>
-//         <AnimateableText animatedProps={animatedKl1Props} style={textStyle} />
-//       </Animated.View>
-//     </View>
-//   );
-// };

@@ -10,7 +10,7 @@
       {
         "root": ["./"],
         "alias": {
-          "@assets": "./src/app/assets",
+          "@assets": "./src/assets",
           "@common": "./src/app/common",
           "@hooks": "./src/app/common/hooks",
           "@validate": "./src/app/common/yup-validate",

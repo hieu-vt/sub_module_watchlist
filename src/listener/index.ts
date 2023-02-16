@@ -1,29 +1,26 @@
-export type Listener = { type: string; cb: (data: any) => void };
-const subscribedChannel: Listener[] = [];
+export type Listener = (data: any) => void;
+import { onCheckType } from '../common/index';
+let subscribedChannel = new Map<string, Listener>();
 
-const subscribe = (listener: Listener, listenerContainer: Listener[]) => {
-  listenerContainer.push(listener);
+const subscribe = (listener: Listener, key: string) => {
+  subscribedChannel.set(key, listener);
 
   return () => {
-    const index = listenerContainer.findIndex(
-      item => item.type === listener.type,
-    );
-    listenerContainer.splice(index, 1);
+    subscribedChannel.delete(key);
   };
 };
 
-export const subscribeChannel = (listener: Listener) => {
-  return subscribe(listener, subscribedChannel);
+export const subscribeChannel = (listener: Listener, key: string) => {
+  return subscribe(listener, key);
 };
 
 export const unsubscribeChannel = () => {
-  subscribedChannel.length = 0;
+  subscribedChannel = new Map<string, Listener>();
 };
 
-export const emitChannel = (actionType: string, data: any) => {
-  subscribedChannel.map((item: { type: string; cb: (data: any) => void }) => {
-    if (item.type === actionType) {
-      item.cb(data);
-    }
-  });
+export const emitChannel = (key: string, data: any) => {
+  const callback = subscribedChannel.get(key);
+  if (onCheckType(callback, 'function')) {
+    callback(data);
+  }
 };

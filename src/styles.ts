@@ -1,13 +1,14 @@
 import { StyleSheet } from 'react-native';
 
-import { HEIGHT_COLUM, SPACER_BOTTOM, WIDTH_COLUM } from './constant';
+import { HEIGHT_COLUM, WIDTH_COLUM } from './constant';
 
 export const styles = StyleSheet.create({
   cell: {
-    minWidth: WIDTH_COLUM,
+    width: WIDTH_COLUM / 1.5,
     height: HEIGHT_COLUM,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
   },
   headerContainer: {
     flexDirection: 'row',
@@ -20,7 +21,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-around',
     borderBottomWidth: 1,
     borderBottomColor: '#DFD3C3',
-    paddingBottom: SPACER_BOTTOM,
   },
   name: {
     fontWeight: 'bold',

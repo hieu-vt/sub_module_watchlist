@@ -8,7 +8,7 @@ import { useFont } from '@shopify/react-native-skia';
 import { Header } from './components/header';
 import { ItemList } from './components/item-list';
 import { PostDelay } from './components/post-delay';
-import { HEIGHT_COLUM } from './constant';
+import { HEIGHT_COLUM, setDataWatch } from './constant';
 import { useUnMount } from './hooks';
 import { emitChannel } from './listener';
 import { DataWatch } from './type';
@@ -32,6 +32,9 @@ export const WatchList = forwardRef(
           setKeyData(data);
         },
         onSetDataWatchList: (d: Record<string, DataWatch>) => {
+          setDataWatch(d);
+        },
+        onEmitWithEvenKey: (d: Record<string, DataWatch>) => {
           for (const key in d) {
             if (d?.[key]) {
               emitChannel(key, d[key]);
@@ -43,8 +46,8 @@ export const WatchList = forwardRef(
     );
 
     // func
-    const renderRow = ({ item }: ListRenderItemInfo<string>) => {
-      return <ItemList keyItem={item} font={font} />;
+    const renderRow = ({ item, index }: ListRenderItemInfo<string>) => {
+      return <ItemList keyItem={item} font={font} index={index} />;
     };
 
     // effect
@@ -73,4 +76,5 @@ export const WatchList = forwardRef(
 export interface WatchList {
   onSetKeyData(data: Array<string>): void;
   onSetDataWatchList(d: Record<string, DataWatch>): void;
+  onEmitWithEvenKey(d: Record<string, DataWatch>): void;
 }
