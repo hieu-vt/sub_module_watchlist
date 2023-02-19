@@ -1,7 +1,7 @@
 export type ItemListProps = {
   keyItem: string;
   font: any;
-  index: number;
+  onNavigateToItem: ((key: string) => void) | any;
 };
 
 export type DataWatch = {

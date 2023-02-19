@@ -21,7 +21,7 @@ export const useSocket = () => {
 
   const socketInit = useCallback(() => {
     console.log('init');
-    const client = io('http://10.0.60.46:3001', {
+    const client = io('http://192.168.0.102:3001', {
       transports: ['websocket'],
       reconnection: true,
       reconnectionDelay: 500,

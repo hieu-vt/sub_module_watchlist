@@ -17,7 +17,11 @@ export const WatchList = forwardRef(
   (
     {
       onSocketOff,
-    }: { onSocketOff: (event?: string | undefined, listener?: any) => void },
+      onNavigateToItem,
+    }: {
+      onSocketOff: (event?: string | undefined, listener?: any) => void;
+      onNavigateToItem: ((key: string) => void) | any;
+    },
     ref,
   ) => {
     // state
@@ -46,8 +50,14 @@ export const WatchList = forwardRef(
     );
 
     // func
-    const renderRow = ({ item, index }: ListRenderItemInfo<string>) => {
-      return <ItemList keyItem={item} font={font} index={index} />;
+    const renderRow = ({ item }: ListRenderItemInfo<string>) => {
+      return (
+        <ItemList
+          keyItem={item}
+          font={font}
+          onNavigateToItem={onNavigateToItem}
+        />
+      );
     };
 
     // effect

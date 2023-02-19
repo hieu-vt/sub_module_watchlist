@@ -283,7 +283,7 @@ DEPENDENCIES
   fastlane-plugin-appcenter
 
 RUBY VERSION
-   ruby 2.7.5p203
+   ruby 3.1.1p18
 
 BUNDLED WITH
    2.1.4

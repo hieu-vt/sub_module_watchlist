@@ -18,7 +18,7 @@ export const unsubscribeChannel = () => {
   subscribedChannel = new Map<string, Listener>();
 };
 
-export const emitChannel = (key: string, data: any) => {
+export const emitChannel = (key: string, data?: any) => {
   const callback = subscribedChannel.get(key);
   if (onCheckType(callback, 'function')) {
     callback(data);
